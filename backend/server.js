@@ -5,6 +5,7 @@ const app = express();
 const PORT = 3000;
  
 app.use(express.json());
+
 app.use(cors());
  
 // root route-confirms the server is running
@@ -16,13 +17,33 @@ app.get('/', (req, res) => {
    // GET /students-returns all students from mysql
 
    app.get('/students', (req,res) => {
-    const sql - 'SELECT * FROM students';
+    const sql = 'SELECT * FROM students';
     db.query(sql, (error,results) => {
         if(error){
             console.error('error getting students:', error);
             return res.status(500).json({error: 'failed to get students'});
         }
         res.json(results);
+    });
+   });
+
+   // POST /students- this is going to receive new student data and inserts into mySQL
+
+   app.post('/students',(req,res) => {
+    const{first_name, last_name, grade_level} = req.body;
+    if(!first_name || !last_name || !grade_level){
+        return res.status(400).json({error: 'first_name, last_name, grade_level are required'});
+    }
+    const sql = 'INSERT INTO students(first_name, last_name, grade_level) VALUES (?, ?, ?)';
+    db.query(sql, [first_name, last_name, grade_level], (error, results) => {
+        if(error){
+            console.error('error adding students:', error);
+            return res.status(500).json({error: 'failed to add students'});
+        }
+        res.status(201).json({
+            message: 'student added successfully',
+            studentID: results.insertId
+        });
     });
    });
 
@@ -46,7 +67,12 @@ app.get('/', (req, res) => {
     db.query(sql, (error, results) => {
         if(error) {
             console.error('error getting enrollments:', error);
-            return res.status(500)
+            return res.status(500).json({error: 'failed to get enrollments'});
         }
-    })
-   })
+        res.json(results);
+    });
+   });
+
+   app.listen(PORT, () => {
+    console.log(`server running at http://localhost:${PORT}`);
+   });
